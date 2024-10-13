@@ -1,60 +1,34 @@
 package server
 
 import (
-	"fmt"
-	"github.com/GagulProject/go-whisky/db"
-	"github.com/GagulProject/go-whisky/forms"
+	"context"
+	"errors"
+	"github.com/GagulProject/go-whisky/controllersfx"
+	"github.com/GagulProject/go-whisky/internal/http"
 	"github.com/GagulProject/go-whisky/internal/repositoryfx"
 	"github.com/GagulProject/go-whisky/internal/sharedfx"
-	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"go.uber.org/fx"
 	"log"
-	"os"
-
-	uuid "github.com/google/uuid"
+	netHttp "net/http"
+	"time"
 )
 
-// CORSMiddleware ...
-// CORS (Cross-Origin Resource Sharing)
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost")
-		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Origin, Authorization, Accept, Client-Security-Token, Accept-Encoding, x-access-token")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		if c.Request.Method == "OPTIONS" {
-			fmt.Println("OPTIONS")
-			c.AbortWithStatus(200)
-		} else {
-			c.Next()
-		}
-	}
+type Server struct {
+	engine *gin.Engine
+	server *http.Server
 }
 
-// RequestIDMiddleware ...
-// Generate a unique ID and attach it to each request for future reference or use
-func RequestIDMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		uuid := uuid.New()
-		c.Writer.Header().Set("X-Request-Id", uuid.String())
-		c.Next()
-	}
+type ServerParams struct {
+	fx.In
+
+	Routes []http.Routes `group:"public.http.routes"`
 }
 
-// var auth = new(controllers.AuthController)
+type ServerResults struct {
+	fx.Out
 
-// TokenAuthMiddleware ...
-// JWT Authentication middleware attached to each request that needs to be authenitcated to validate the access_token in the header
-func TokenAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		//	auth.TokenValid(c)
-		c.Next()
-	}
+	Server *http.Server `group:"http.servers"`
 }
 
 func Options() fx.Option {
@@ -64,87 +38,48 @@ func Options() fx.Option {
 	)
 }
 
-func InvokeServer() fx.Option {
-	return fx.Invoke(func() {
+func HTTPServerModule() fx.Option {
+	return fx.Module(
+		"httpServer",
+		controllersfx.Option,
 
-		//Start the default gin server
-		r := gin.Default()
+		fx.Provide(
+			NewServer,
+		),
+	)
+}
 
-		//Custom form validator
-		binding.Validator = new(forms.DefaultValidator)
+func NewServer(
+	lifeCycle fx.Lifecycle,
+	params ServerParams,
+) (ServerResults, error) {
+	server, err := http.NewServer(http.ServerConfig{Port: "8080"}, params.Routes)
 
-		r.Use(CORSMiddleware())
-		r.Use(RequestIDMiddleware())
-		r.Use(gzip.Gzip(gzip.DefaultCompression))
+	lifeCycle.Append(fx.Hook{
+		OnStart: func(_ context.Context) error {
+			go func(server *http.Server) {
+				log.Println("starting server ...")
+				if err := server.Run(); err != nil && !errors.Is(err, netHttp.ErrServerClosed) {
+					panic(err)
+				}
+			}(server)
+			return nil
+		},
+		OnStop: func(_ context.Context) error {
+			log.Println("stopping server ...")
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
 
-		//Start PostgreSQL database
-		//Example: db.GetDB() - More info in the model folder
-		os.Setenv("DB_USER", "go_whisky")
-		db.Init()
-
-		//Start Redis on database 1 - it's used to store the JWT but you can use it for anythig else
-		//Example: db.GetRedis().Set(KEY, VALUE, at.Sub(now)).Err()
-		db.InitRedis(1)
-
-		//v1 := r.Group("/v1")
-		//{
-		//	/*** START USER ***/
-		//	user := new(controllers.UserController)
-		//
-		//	v1.POST("/user/login", user.Login)
-		//	v1.POST("/user/register", user.Register)
-		//	v1.GET("/user/logout", user.Logout)
-		//
-		//	/*** START AUTH ***/
-		//	auth := new(controllers.AuthController)
-		//
-		//	//Refresh the token when needed to generate new access_token and refresh_token for the user
-		//	v1.POST("/token/refresh", auth.Refresh)
-		//
-		//	/*** START Article ***/
-		//	article := new(controllers.ArticleController)
-		//
-		//	v1.POST("/article", TokenAuthMiddleware(), article.Create)
-		//	v1.GET("/articles", TokenAuthMiddleware(), article.All)
-		//	v1.GET("/article/:id", TokenAuthMiddleware(), article.One)
-		//	v1.PUT("/article/:id", TokenAuthMiddleware(), article.Update)
-		//	v1.DELETE("/article/:id", TokenAuthMiddleware(), article.Delete)
-		//}
-
-		//		r.LoadHTMLGlob("./public/html/*")
-
-		r.Static("/public", "./public")
-
-		//r.GET("/", func(c *gin.Context) {
-		//	c.HTML(http.StatusOK, "index.html", gin.H{
-		//		"ginBoilerplateVersion": "v0.03",
-		//		"goVersion":             runtime.Version(),
-		//	})
-		//})
-
-		r.NoRoute(func(c *gin.Context) {
-			c.HTML(404, "404.html", gin.H{})
-		})
-
-		port := os.Getenv("PORT")
-
-		log.Printf("\n\n PORT: %s \n ENV: %s \n SSL: %s \n Version: %s \n\n", port, os.Getenv("ENV"), os.Getenv("SSL"), os.Getenv("API_VERSION"))
-
-		if os.Getenv("SSL") == "TRUE" {
-
-			//Generated using sh generate-certificate.sh
-			SSLKeys := &struct {
-				CERT string
-				KEY  string
-			}{
-				CERT: "./cert/myCA.cer",
-				KEY:  "./cert/myCA.key",
+			if err := server.Shutdown(ctx); err != nil {
+				log.Fatal("Server Shutdown:", err)
+				return err
 			}
-
-			r.RunTLS(":"+port, SSLKeys.CERT, SSLKeys.KEY)
-		} else {
-			r.Run(":" + port)
-		}
+			log.Println("stopped server success")
+			return nil
+		},
 	})
 
+	return ServerResults{
+		Server: server,
+	}, err
 }

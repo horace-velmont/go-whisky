@@ -6,5 +6,5 @@ import (
 )
 
 var Option = fx.Options(
-	fx.Provide(whisky.NewWhiskyRepositories),
+	fx.Provide(whisky.NewWhiskyRepository),
 )

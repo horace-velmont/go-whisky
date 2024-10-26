@@ -14,7 +14,7 @@ import (
 type WhiskyRepositoriesTestSuite struct {
 	suite.Suite
 	app  *server.TestServer
-	repo whiskyR.WhiskyRepositories
+	repo whiskyR.WhiskyRepository
 }
 
 func (s *WhiskyRepositoriesTestSuite) SetupTest() {

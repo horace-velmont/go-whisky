@@ -3,6 +3,7 @@ package shared
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"strconv"
 )
@@ -22,6 +23,9 @@ func NewPSQL() *sql.DB {
 			"disable",
 		),
 	)
+	if err != nil {
+		panic(err)
+	}
 	maxConnections, err := strconv.Atoi("10")
 	if err != nil {
 		panic(err)
@@ -38,7 +42,6 @@ func NewPSQL() *sql.DB {
 	return db
 }
 
-// password 없이 사용하는 경우 escape가 없으면 sslmode 에러가 발생함
 func buildDataSourceName(host string, dbName string, schemaName string, user string, password string, sslMode string) string {
 	return fmt.Sprintf("host=%s dbname=%s search_path=%s user=%s password='%s' sslmode=%s", host, dbName, schemaName, user, password, sslMode)
 }

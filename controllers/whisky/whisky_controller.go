@@ -1,4 +1,4 @@
-package controllers
+package whisky
 
 import (
 	"github.com/GagulProject/go-whisky/internal/http"

@@ -4,30 +4,30 @@ import (
 	"context"
 	"github.com/GagulProject/go-whisky/generated/models"
 	"github.com/GagulProject/go-whisky/internal/model/whisky"
-	whiskyR "github.com/GagulProject/go-whisky/internal/repository/whisky"
+	whiskySvc "github.com/GagulProject/go-whisky/internal/service/whisky"
 	"github.com/GagulProject/go-whisky/server"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-type WhiskyRepositoriesTestSuite struct {
+type WhiskyServiceTestSuite struct {
 	suite.Suite
-	app  *server.TestServer
-	repo whiskyR.WhiskyRepository
+	app *server.TestServer
+	svc whiskySvc.WhiskyService
 }
 
-func (s *WhiskyRepositoriesTestSuite) SetupTest() {
+func (s *WhiskyServiceTestSuite) SetupTest() {
 	s.app = server.
-		NewTestServer(server.Populate(&s.repo)).
+		NewTestServer(server.Populate(&s.svc)).
 		WithPreparedTables(models.TableNames.Whisky)
 	defer func() {
 		s.app.Stop()
 	}()
 }
 
-func (s *WhiskyRepositoriesTestSuite) TestServer() {
-	whiskyM, err := s.repo.Create(context.Background(), &whisky.Whisky{
+func (s *WhiskyServiceTestSuite) TestCreate() {
+	whiskyM, err := s.svc.Create(context.Background(), &whisky.Whisky{
 		Strength: 30,
 		Size:     500,
 	})
@@ -35,6 +35,6 @@ func (s *WhiskyRepositoriesTestSuite) TestServer() {
 	assert.Equal(s.T(), whiskyM.Strength, 30)
 }
 
-func TestIWhiskyRepositoriesTestSuite(t *testing.T) {
-	suite.Run(t, new(WhiskyRepositoriesTestSuite))
+func TestIWhiskyServiceTestSuite(t *testing.T) {
+	suite.Run(t, new(WhiskyServiceTestSuite))
 }

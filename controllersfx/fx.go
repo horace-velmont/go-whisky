@@ -1,7 +1,7 @@
 package controllersfx
 
 import (
-	"github.com/GagulProject/go-whisky/controllers"
+	"github.com/GagulProject/go-whisky/controllers/whisky"
 	"github.com/GagulProject/go-whisky/internal/http"
 	"go.uber.org/fx"
 )
@@ -9,7 +9,7 @@ import (
 var Option = fx.Options(
 	fx.Provide(
 		fx.Annotate(
-			controllers.NewWhiskyController,
+			whisky.NewWhiskyController,
 			fx.As(new(http.Routes)),
 			fx.ResultTags(`group:"public.http.routes"`),
 		),

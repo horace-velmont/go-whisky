@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"github.com/GagulProject/go-whisky/internal/repositoryfx"
+	"github.com/GagulProject/go-whisky/internal/servicefx"
 	"github.com/GagulProject/go-whisky/internal/sharedfx"
 	"go.uber.org/fx"
 )
@@ -51,6 +52,7 @@ func (t *TestServer) Stop() {
 
 func TestOptions() fx.Option {
 	return fx.Options(
+		servicefx.Option,
 		repositoryfx.Option,
 		sharedfx.Option,
 	)

@@ -6,6 +6,7 @@ import (
 	"github.com/GagulProject/go-whisky/controllersfx"
 	"github.com/GagulProject/go-whisky/internal/http"
 	"github.com/GagulProject/go-whisky/internal/repositoryfx"
+	"github.com/GagulProject/go-whisky/internal/servicefx"
 	"github.com/GagulProject/go-whisky/internal/sharedfx"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
@@ -33,6 +34,7 @@ type ServerResults struct {
 
 func Options() fx.Option {
 	return fx.Options(
+		servicefx.Option,
 		repositoryfx.Option,
 		sharedfx.Option,
 	)

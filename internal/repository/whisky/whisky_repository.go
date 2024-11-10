@@ -8,21 +8,21 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 )
 
-type WhiskyRepositories interface {
+type WhiskyRepository interface {
 	Create(context.Context, *whisky.Whisky) (*models.Whisky, error)
 }
 
-type whiskyRepositories struct {
+type whiskyRepository struct {
 	db *sql.DB
 }
 
-func NewWhiskyRepositories(db *sql.DB) WhiskyRepositories {
-	return &whiskyRepositories{
+func NewWhiskyRepository(db *sql.DB) WhiskyRepository {
+	return &whiskyRepository{
 		db: db,
 	}
 }
 
-func (r whiskyRepositories) Create(ctx context.Context, whisky *whisky.Whisky) (*models.Whisky, error) {
+func (r whiskyRepository) Create(ctx context.Context, whisky *whisky.Whisky) (*models.Whisky, error) {
 	model := toBoiler(whisky)
 	err := model.Insert(ctx, r.db, boil.Infer())
 	if err != nil {

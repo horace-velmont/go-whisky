@@ -35,6 +35,16 @@ func (s *WhiskyServiceTestSuite) TestCreate() {
 	assert.Equal(s.T(), whiskyM.Strength, 30)
 }
 
+func (s *WhiskyServiceTestSuite) TestScroll() {
+	s.createMockWhiskies()
+
+	whiskies, err := s.svc.ScrollAll(context.Background())
+}
+
+func (s *WhiskyServiceTestSuite) createMockWhiskies() {
+	
+}
+
 func TestIWhiskyServiceTestSuite(t *testing.T) {
 	suite.Run(t, new(WhiskyServiceTestSuite))
 }

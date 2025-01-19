@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GagulProject/go-whisky/internal/shared/repo"
 	"github.com/samber/lo"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+
+	"github.com/GagulProject/go-whisky/internal/shared/errors"
+	"github.com/GagulProject/go-whisky/internal/shared/repo"
 )
 
 type ScrollFetchFn[T any] func(
@@ -14,10 +16,10 @@ type ScrollFetchFn[T any] func(
 	...qm.QueryMod,
 ) ([]*T, error)
 
-func Scroll[D repo.DomainModel, S any](
+func Scroll[D repo.DomainModel, B repo.BoilerModel, A any](
 	ctx context.Context,
-	repo sqlrepov2.ReadSQLRepo[D],
-	option *ScrollOption[S],
+	repo repo.Repo[D, B],
+	option *ScrollOption[A],
 	field string,
 	mods ...qm.QueryMod,
 ) (*Page[D], error) {

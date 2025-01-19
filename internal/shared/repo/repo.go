@@ -8,9 +8,9 @@ import (
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
-	"github.com/samber/lo"
 	"github.com/GagulProject/go-whisky/internal/shared/errors"
 	httperr "github.com/GagulProject/go-whisky/internal/shared/errors/http"
+	"github.com/samber/lo"
 )
 
 // Repo는 기본적인 CRUD 작업을 위한 인터페이스입니다.
@@ -39,11 +39,11 @@ type (
 	}
 
 	BoilerSliceModel interface{}
-	DomainModel     interface{ comparable }
+	DomainModel      interface{ comparable }
 
 	// 모델 변환을 위한 함수 타입들
-	DomainToBoilerFunc[D DomainModel, B BoilerModel] func(D) (B, error)
-	BoilerToDomainFunc[D DomainModel, B BoilerModel] func(B) (D, error)
+	DomainToBoilerFunc[D DomainModel, B BoilerModel]         func(D) (B, error)
+	BoilerToDomainFunc[D DomainModel, B BoilerModel]         func(B) (D, error)
 	BoilerSliceConverter[BS BoilerSliceModel, B BoilerModel] func(BS) []B
 )
 
@@ -57,11 +57,11 @@ type Query[B BoilerModel, BS BoilerSliceModel] interface {
 type QueryStarter[B BoilerModel, BS BoilerSliceModel] func(...qm.QueryMod) Query[B, BS]
 
 type repo[D DomainModel, B BoilerModel, BS BoilerSliceModel] struct {
-	db                *sql.DB
-	toDomainFunc     BoilerToDomainFunc[D, B]
-	toBoilerFunc     DomainToBoilerFunc[D, B]
-	sliceConverter   BoilerSliceConverter[BS, B]
-	queryStarter     QueryStarter[B, BS]
+	db             *sql.DB
+	toDomainFunc   BoilerToDomainFunc[D, B]
+	toBoilerFunc   DomainToBoilerFunc[D, B]
+	sliceConverter BoilerSliceConverter[BS, B]
+	queryStarter   QueryStarter[B, BS]
 }
 
 // New는 새로운 Repository 인스턴스를 생성합니다.
@@ -73,11 +73,11 @@ func New[D DomainModel, B BoilerModel, BS BoilerSliceModel](
 	starter QueryStarter[B, BS],
 ) Repo[D, B] {
 	return &repo[D, B, BS]{
-		db:              db,
-		toDomainFunc:    toDomainFunc,
-		toBoilerFunc:    toBoilerFunc,
-		sliceConverter:  sliceConverter,
-		queryStarter:    starter,
+		db:             db,
+		toDomainFunc:   toDomainFunc,
+		toBoilerFunc:   toBoilerFunc,
+		sliceConverter: sliceConverter,
+		queryStarter:   starter,
 	}
 }
 

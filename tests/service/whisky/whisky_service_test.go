@@ -2,13 +2,17 @@ package whisky
 
 import (
 	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/GagulProject/go-whisky/generated/models"
 	"github.com/GagulProject/go-whisky/internal/model/whisky"
 	whiskySvc "github.com/GagulProject/go-whisky/internal/service/whisky"
+	"github.com/GagulProject/go-whisky/internal/shared/epoch"
+	"github.com/GagulProject/go-whisky/internal/shared/scroller"
 	"github.com/GagulProject/go-whisky/server"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type WhiskyServiceTestSuite struct {
@@ -38,11 +42,21 @@ func (s *WhiskyServiceTestSuite) TestCreate() {
 func (s *WhiskyServiceTestSuite) TestScroll() {
 	s.createMockWhiskies()
 
-	whiskies, err := s.svc.ScrollAll(context.Background())
+	whiskies, err := s.svc.ScrollAll(context.Background(), &scroller.PageRequest[epoch.Milli]{
+		Limit: 10,
+	})
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), len(whiskies.Collection), 10)
 }
 
 func (s *WhiskyServiceTestSuite) createMockWhiskies() {
-	
+	for i := 0; i < 10; i++ {
+		_, err := s.svc.Create(context.Background(), &whisky.Whisky{
+			Strength: 30,
+			Size:     500,
+		})
+		assert.NoError(s.T(), err)
+	}
 }
 
 func TestIWhiskyServiceTestSuite(t *testing.T) {

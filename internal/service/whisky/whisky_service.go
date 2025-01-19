@@ -2,7 +2,6 @@ package whisky
 
 import (
 	"context"
-	"github.com/GagulProject/go-whisky/generated/models"
 	"github.com/GagulProject/go-whisky/internal/model/whisky"
 	whiskyR "github.com/GagulProject/go-whisky/internal/repository/whisky"
 	"github.com/GagulProject/go-whisky/internal/shared/epoch"
@@ -15,7 +14,7 @@ type whiskyService struct {
 }
 
 type WhiskyService interface {
-	Create(context.Context, *whisky.Whisky) (*models.Whisky, error)
+	Create(context.Context, *whisky.Whisky) (*whisky.Whisky, error)
 	ScrollAll(ctx context.Context, request *scroller.PageRequest[epoch.Milli]) (*scroller.Page[*whisky.Whisky], error)
 }
 
@@ -25,7 +24,7 @@ func NewWhiskyService(repo whiskyR.WhiskyRepository) WhiskyService {
 	}
 }
 
-func (w *whiskyService) Create(ctx context.Context, whisky *whisky.Whisky) (*models.Whisky, error) {
+func (w *whiskyService) Create(ctx context.Context, whisky *whisky.Whisky) (*whisky.Whisky, error) {
 	return w.repo.Create(ctx, whisky)
 }
 
